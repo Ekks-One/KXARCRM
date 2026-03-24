@@ -25,8 +25,12 @@ export default function LandingPage() {
 
   async function signIn(email: string, password: string) {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    window.location.href= "/pages/dashboard";
-    if (error) throw error;
+    if (error) {
+      alert("Wrong Login Info")
+    }
+    else {
+      window.location.href= "/pages/dashboard";
+    }
   }
   
 

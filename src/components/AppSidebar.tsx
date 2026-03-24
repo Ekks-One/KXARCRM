@@ -1,7 +1,8 @@
 import React from 'react'
-import { Calendar, Contact, Database, Home, Inbox, Link, Settings, Star } from "lucide-react"
+import { Calendar, Contact, Database, Home, Inbox, Settings, Star } from "lucide-react"
 import Image from "next/image"
 import SignOut from "../app/pages/database/signout";
+import Link from "next/link"
 
 import {
   Sidebar,
@@ -60,16 +61,16 @@ export const AppSidebar = () => {
         <SidebarContent>
         <SidebarGroup>
             <SidebarGroupLabel>
-              <a href="/">
-              <Image
-                className="dark:invert"
-                src="/KXARLOGO.svg"
-                alt="KXAR logo"
-                width={50}
-                height={25}
-                priority
-              />
-              </a>
+              <Link href="/pages/dashboard">
+                <Image
+                  className="dark:invert"
+                  src="/KXARLOGO.svg"
+                  alt="KXAR logo"
+                  width={50}
+                  height={25}
+                  priority
+                />
+              </Link>
 
             </SidebarGroupLabel>
             <SidebarGroupContent>

@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
+import { Trash } from 'lucide-react'
 import { supabase } from '@/app/server/supabaseClient';
 
 interface TeamMember {
@@ -119,6 +120,20 @@ export default function TeamPage() {
                 return 'bg-yellow-100';
             default:
                 return 'bg-gray-100';
+        }
+    };
+
+    const handleDeleteMember = async (id: number) => {
+        const { error } = await supabase
+            .from('team_members')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error deleting team member:', error);
+            alert('Error deleting team member: ' + error.message);
+        } else {
+            setTeamMembers(teamMembers.filter((member) => member.id !== id));
         }
     };
 
@@ -271,6 +286,13 @@ export default function TeamPage() {
                                             </div>
                                             <p className="text-sm text-gray-500">{member.role}</p>
                                         </div>
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={() => handleDeleteMember(member.id)}
+                                        >
+                                            <Trash/>
+                                        </Button>
                                     </div>
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between text-sm">

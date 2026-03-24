@@ -22,7 +22,7 @@ export default function LoginModal({ onLoginSubmit, triggerText = "Login"}: Prop
 
     async function handleLogin(email: string, password: string) {
         await onLoginSubmit(email, password);
-        setOpen(false);
+        // setOpen(false);
         //Close on success 
     }
 
