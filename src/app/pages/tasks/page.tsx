@@ -23,6 +23,7 @@ interface Task {
     status: 'pending' | 'in-progress' | 'completed';
     customer_id: string;
     assignee_id: number | null;
+    user_id: string;
 }
 
 //Skeleton for TeamMember
@@ -100,15 +101,25 @@ export default function Tasks() {
 
     //Fetches Task from Tasks table
     const fetchTasks = async () => {
+        const {
+            data: {user},
+            error: userError,
+        } = await supabase.auth.getUser();
+
+        if (userError || !user) {
+            console.error('No Signed-in User Found:', userError?.message);
+            return;
+        }
+
         const {data, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .order('id', { ascending: true });
+            .from('tasks')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('id', { ascending: true });
 
         if (error) {
             console.error('Error fetching tasks:', error);
         } else {
-
             setTasks(data as Task[]);
         }
     };
@@ -145,10 +156,23 @@ export default function Tasks() {
             return;
         }
 
+        const {
+            data: {user},
+            error: userError,
+        } = await supabase.auth.getUser();
+
+        if (userError || !user) {
+            console.error("No signed-in user found:", userError?.message);
+            alert("You must be signed in to delete a task.");
+            return;
+        }
+
         const { error } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', taskId);
+            .from('tasks')
+            .delete()
+            .eq('id', taskId)
+            .eq('user_id', user.id);
+
 
         if(error) {
             console.error('Error deleting task:', error);
@@ -160,18 +184,29 @@ export default function Tasks() {
     };
 
     const handleAddTask = async () => {
-        const{data, error} = await supabase
-        .from('tasks')
-        .insert([
-        {
-            title: newTask.title,
-            description: newTask.description,
-            assignee_id: newTask.assignee_id === '' ? null : Number(newTask.assignee_id),
-            due_date: newTask.due_date,
-            priority: newTask.priority,
-            status: newTask.status,
-            customer_id: newTask.customer_id,
+        const {
+            data: {user},
+            error: userError,
+        } = await supabase.auth.getUser();
+
+        if(userError || !user) {
+            console.error("No signed-in user found", userError?.message);
+            alert('You must be signed in to add a task.');
+            return;
         }
+        const{data, error} = await supabase
+            .from('tasks')
+            .insert([
+            {
+                title: newTask.title,
+                description: newTask.description,
+                assignee_id: newTask.assignee_id === '' ? null : Number(newTask.assignee_id),
+                due_date: newTask.due_date,
+                priority: newTask.priority,
+                status: newTask.status,
+                customer_id: newTask.customer_id,
+                user_id: user.id,
+            }
         ])
         //Returns new inserted task from supabase
         .select()

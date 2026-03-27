@@ -10,14 +10,14 @@ import { User } from 'lucide-react';
 
 export default function ShowCalendar() {
     interface Task {
-    id: number;
-    title: string;
-    description: string;
-    assignee: string;
-    due_date: string;
-    priority: 'low' | 'medium' | 'high';
-    status: 'pending' | 'in-progress' | 'completed';
-    customer_id: string;
+        id: number;
+        title: string;
+        description: string;
+        assignee: string;
+        due_date: string;
+        priority: 'low' | 'medium' | 'high';
+        status: 'pending' | 'in-progress' | 'completed';
+        customer_id: string;
     }
 
     const [tasks, setTasks] = useState<Task[]>([
@@ -60,10 +60,21 @@ export default function ShowCalendar() {
     }, []);
 
     const fetchTasks = async () => {
+        const {
+            data: {user},
+            error: userError,
+        } = await supabase.auth.getUser();
+
+        if (userError || !user) {
+            console.error("No signed-in user found:", userError?.message);
+            return;
+        }
+
             const {data, error } = await supabase
-            .from('tasks')
-            .select('*')
-            .order('id', { ascending: true });
+                .from('tasks')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('id', { ascending: true });
 
             if (error) {
                 console.error('Error fetching tasks:', error);

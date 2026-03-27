@@ -8,17 +8,32 @@ import { supabase } from '@/app/server/supabaseClient';
 
 export function ShowCustomers () {
 
-    const[customers, setCustomers] = useState([]);
+    const[customers, setCustomers] = useState<any[]>([]);
 
     useEffect(() => {
         fetchData();
     }, []);
 
     const fetchData = async () => {
-        const {data, error } = await supabase.from('customers').select('*');
+        const {
+            data: {user},
+        } = await supabase.auth.getUser();
 
-        if (error) {console.error('Error fetching customers: ', error);}
-        else {setCustomers(data);}
+        if (!user) {
+            console.error("No user found");
+            return;
+        }
+
+        const {data, error } = await supabase
+        .from('customers')
+        .select('*')
+        .eq("user_id", user.id);
+
+        if (error) {
+            console.error('Error fetching customers: ', error);
+        }
+        else {
+            setCustomers(data);}
     };
 
     return (

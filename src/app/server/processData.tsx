@@ -8,6 +8,15 @@ export async function processData(
     address: string,
     notes: string
 ) {
+    const {
+        data: { user },
+        error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+        console.error("No signed-in user found:", userError?.message);
+        return {error: userError, data: null};
+    }
     const {data, error} = await supabase.from("customers").insert({
         first_name,
         last_name,
@@ -15,6 +24,7 @@ export async function processData(
         phone_number,
         address,
         notes,
+        user_id: user.id,
     });
 
     if(error) {
