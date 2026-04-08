@@ -22,8 +22,6 @@ export default function LoginModal({ onLoginSubmit, triggerText = "Login"}: Prop
 
     async function handleLogin(email: string, password: string) {
         await onLoginSubmit(email, password);
-        // setOpen(false);
-        //Close on success 
     }
 
     return (
@@ -31,7 +29,6 @@ export default function LoginModal({ onLoginSubmit, triggerText = "Login"}: Prop
       <DialogTrigger asChild>
         <Button>{triggerText}</Button>
       </DialogTrigger>
-
       <DialogContent className="sm:max-w-md 
         rounded-2xl
         border border-white/10

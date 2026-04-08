@@ -13,23 +13,24 @@ import {
 import SignUp from "@/components/SignUp";
 
 type Props = {
-    onSignUpSubmit: (email: string, password: string, confirmPassword: string) => void;
+    onSignUpSubmit: (fullName: string, email: string, password: string, confirmPassword: string) => Promise<{ error?: { message: string } }>;
     triggerText?: String;
 };
 
 export default function SignUpModal({ onSignUpSubmit, triggerText = "Create account"}: Props) {
     const [open, setOpen] = React.useState(false);
 
-    async function handleSignUp(email: string, password: string, confirmPassword: string) {
-        await onSignUpSubmit(email, password, confirmPassword);
-        if(password !== confirmPassword) {
-            alert("Passwords Don't Match");
-        }
-        else {
-            alert("Check Email for Verification Link");
-            setOpen(false);
-        }
-        //Close on success 
+    async function handleSignUp(fullName: string, email: string, password: string, confirmPassword: string) {
+      console.log("MODAL HANDLE SIGNUP", { fullName, email });
+      const result = await onSignUpSubmit(fullName, email, password, confirmPassword);
+
+    if (result?.error) {
+      alert(result.error.message);
+      return;
+    }
+
+    alert("Check Email for Verification Link");
+    setOpen(false);
     }
 
     return (

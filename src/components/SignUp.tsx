@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card"
 
 interface SignUpProps {
-  onSignUpSubmit: (username: string, password: string, confirmPassword: string) => void;
+  onSignUpSubmit: (fullName: string, email: string, password: string, confirmPassword: string) => void;
   variant?: "page" | "modal";
 }
 
@@ -24,11 +24,13 @@ export default function SignUp({ onSignUpSubmit, variant = "page" }: SignUpProps
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
+  const [fullName, setFullName] = React.useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Form Submitted", {fullName, email});
     // Call the callback function, passing the state values up to the parent
-    onSignUpSubmit(email, password, confirmPassword);
+    onSignUpSubmit(fullName, email, password, confirmPassword);
 
     // Clear form fields after submission
     // setEmail('');
@@ -51,6 +53,8 @@ export default function SignUp({ onSignUpSubmit, variant = "page" }: SignUpProps
                 <Input
                   id="name"
                   type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
                   placeholder="John Doe"
                   required
                 />
@@ -69,9 +73,9 @@ export default function SignUp({ onSignUpSubmit, variant = "page" }: SignUpProps
               </div>
               <div className="grid gap-2">
                 {/* Password Input */}
-                <Label htmlFor="email">Password</Label>
+                <Label htmlFor="password">Password</Label>
                 <Input
-                  id="email"
+                  id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -83,7 +87,7 @@ export default function SignUp({ onSignUpSubmit, variant = "page" }: SignUpProps
               {/* Password Input */}
               <div className="grid gap-2">
                 <div className="flex items-center">
-                  <Label htmlFor="password">Confirm Password</Label>
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
                 </div>
                 <Input
                   id="confirmPassword"

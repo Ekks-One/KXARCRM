@@ -1,8 +1,8 @@
 'use client';
 
 import "./pageStyle.css";
-import PieChart from "@/app/pages/dashboard/piechart.tsx";
-import BarChart from "@/app/pages/dashboard/bargraph.tsx";
+import PieChart from "@/app/pages/dashboard/piechart";
+import BarChart from "@/app/pages/dashboard/bargraph";
 
 export default function DashboardPage() {
 
@@ -10,8 +10,8 @@ export default function DashboardPage() {
 
     <>
     <div className='infographics'>
-        <PieChart className = 'projectsChart' />
-        <BarChart className = 'statisticsGraph'/>
+        <PieChart />
+        <BarChart />
     </div>
     </>
 

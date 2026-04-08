@@ -1,7 +1,6 @@
 import React from 'react'
-import { Calendar, Contact, Database, Home, Inbox, Settings, Star } from "lucide-react"
+import {Menu, Calendar, LogOut, Database, Home, Inbox, Settings, Star } from "lucide-react"
 import Image from "next/image"
-import SignOut from "../app/pages/database/signout";
 import Link from "next/link"
 
 import {
@@ -9,7 +8,6 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -37,11 +35,10 @@ const items = [
     url: "/pages/calendar",
     icon: Calendar,
   },
-
   {
-    title: "Contacts",
-    url: "#",
-    icon: Contact,
+    title: "Our Team",
+    url: "/pages/teams",
+    icon: Star,
   },
   {
     title: "Settings",
@@ -49,47 +46,45 @@ const items = [
     icon: Settings,
   },
   {
-    title: "Our Team",
-    url: "/pages/teams",
-    icon: Star,
+    title: "Sign Out",
+    url: "/",
+    icon: LogOut,
   },
 ]
 
 export const AppSidebar = () => {
   return (
-    <Sidebar>
-        <SidebarContent>
+    <Sidebar className="sticky top-0 h-screen border-r">
+      <SidebarContent>
+        <Link href="/pages/dashboard" className="flex items-center gap-3 px-3 py-3">
+          <Image
+            src="/KXARICON.png"
+            alt="KXAR logo"
+            width={50}
+            height={50}
+            priority
+          />
+          <span className="text-xl font-semibold tracking-tight text-gray-900">
+            KXARCRM
+          </span>
+        </Link>
         <SidebarGroup>
-            <SidebarGroupLabel>
-              <Link href="/pages/dashboard">
-                <Image
-                  className="dark:invert"
-                  src="/KXARLOGO.svg"
-                  alt="KXAR logo"
-                  width={50}
-                  height={25}
-                  priority
-                />
-              </Link>
-
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-            <SidebarMenu>
-                {items.map((item) => (
+          <SidebarGroupContent>
+            <SidebarMenu className = "space-y-1">
+              {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                    <a href={item.url}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                    </a>
-                    </SidebarMenuButton>
+                  <SidebarMenuButton asChild>
+                    <Link href={item.url}>
+                      <item.icon className="h-5 w-5"/>
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
                 </SidebarMenuItem>
-                ))}
+              ))}
             </SidebarMenu>
-            </SidebarGroupContent>
+          </SidebarGroupContent>
         </SidebarGroup>
-        </SidebarContent>
-        <SignOut />
+      </SidebarContent>
     </Sidebar>
   )
 }

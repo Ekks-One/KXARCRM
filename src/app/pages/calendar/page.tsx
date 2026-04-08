@@ -25,7 +25,7 @@ export default function ShowCalendar() {
 
     const [date, setValue] = useState(new Date());
 
-    const handleDateChange = (date) => {
+    const handleDateChange = (date: Date) => {
         setValue(date);
     };
 
@@ -89,7 +89,7 @@ export default function ShowCalendar() {
     const tileTasks = new Set(tasks.map(task => task.due_date))
 
     // Function used for highlighting dates w/ tasks due
-    function tileClassName({ date, view }) {
+    function tileClassName({ date, view }: { date: Date; view: string }) {
         if (view === 'month') {
             const formattedDate = date.toISOString().substring(0,10)
             if(tileTasks.has(formattedDate))

@@ -5,22 +5,31 @@ import { supabase } from "@/app/server/supabaseClient";
 import SignUpModal from "@/components/SignUpModal";
 import LoginModal from "@/components/LoginModal";
 import styles from "./landing.module.css";
-import { Sign } from "crypto";
 
 
 export default function LandingPage() {
   const [loginStatus, setLoginStatus] = useState<string>("");
 
-  async function signUp(email: string, password: string, confirmPassword: string) {
-    // if (password !== confirmPassword) {
-    //   setLoginStatus("Passwords do not match");
-    //   return;
-    // }
+  async function signUp(fullName: string, email: string, password: string, confirmPassword: string) {
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+      return { error: { message: "Passwords do not match" } };
+    }
 
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { error } = await supabase.auth.signUp({ 
+      email, 
+      password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+        },
+      });
 
     if (error) setLoginStatus(error.message);
     else setLoginStatus("Signed up! Check your email to confirm.");
+    
+    return { error: error ? { message: error.message } : undefined };
   }
 
   async function signIn(email: string, password: string) {
@@ -47,8 +56,12 @@ export default function LandingPage() {
           <a href="#features">Features</a>
           <a href="#pricing">Pricing</a>
           <a href="#contact">Contact</a>
-          <LoginModal onLoginSubmit={signIn} triggerText="Sign in" />
-          <SignUpModal onSignUpSubmit={signUp} triggerText="Sign Up" />
+          <div className={styles.signButtons}>
+            <LoginModal onLoginSubmit={signIn} triggerText="Sign in" />
+          </div>
+          <div className={styles.signButtons}>
+            <SignUpModal onSignUpSubmit={signUp} triggerText="Sign Up" />
+          </div>
         </nav>
       </header>
 

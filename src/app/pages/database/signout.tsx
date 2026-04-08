@@ -2,7 +2,7 @@
 import {supabase} from "@/app/server/supabaseClient"
 import type { MouseEvent } from "react";
 import { Button } from "@/components/ui/button";
-import "./pageStyle.css";
+import Link from "next/link"
 
 export default function SignOut() {
   const signOut = async (event: MouseEvent<HTMLButtonElement>) => {
@@ -13,13 +13,13 @@ export default function SignOut() {
     if(error) {
       console.error('Error Signing Out');
     }
-
-    window.location.href = 'http://localhost:3000/'
   };
 
   return (
     <>
-      <Button onClick={signOut}>Sign Out</Button>
+      <Link href="/">
+        <Button style={{ width: "100%" }} onClick={signOut}>Sign Out</Button>
+      </Link>
     </>
   );
 }

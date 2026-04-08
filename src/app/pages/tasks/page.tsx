@@ -22,14 +22,15 @@ interface Task {
     priority: 'low' | 'medium' | 'high';
     status: 'pending' | 'in-progress' | 'completed';
     customer_id: string;
-    assignee_id: number | null;
+    assignee_profile_id: string | null;
     user_id: string;
 }
 
 //Skeleton for TeamMember
 interface TeamMember {
-    id: number;
-    member_name: string;
+    id: string;
+    full_name: string;
+    status: 'active' | 'inactive';
 }
 
 
@@ -51,7 +52,7 @@ export default function Tasks() {
         priority: 'medium' as const,
         status: 'pending' as const,
         customer_id: '',
-        assignee_id: '',
+        assignee_profile_id: '',
     });
 
     //Holds list of all Team Members
@@ -62,14 +63,23 @@ export default function Tasks() {
     const [priorityFilter, setPriorityFilter] = useState<'all' |'high' | 'medium' | 'low'>('all');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-
+    //filtering tasks by ownership (created by user, assigned to user, or all)
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+    const [ownershipFilter, setOwnershipFilter] = useState<'all' | 'created' | 'assigned'>('all');
+    
     // Old method for filtering tasks by status only
     // const filteredTasks = statusFilter === 'all' ? tasks : tasks.filter(task => task.status === statusFilter);
 
     const filteredTasks = tasks.filter(task => {
         const matchStatus = statusFilter === 'all' || task.status === statusFilter;
         const matchPriority = priorityFilter === 'all' || task.priority === priorityFilter;
-        return matchStatus && matchPriority;
+
+        //Filters tasks based on ownership selection - either tasks created by the user, assigned to the user, or all tasks
+        const matchOwnership =
+            ownershipFilter === 'all' ||
+            (ownershipFilter === 'created' && task.user_id === currentUserId) ||
+            (ownershipFilter === 'assigned' && task.assignee_profile_id === currentUserId);
+        return matchStatus && matchPriority && matchOwnership;
     })
 
     //Fetches tasks and teamMembers from Supabase and loads them
@@ -79,18 +89,19 @@ export default function Tasks() {
     }, []);
 
     // Converts assignee_id into readable team member name to display on page
-    const getAssigneeName = (assigneeId: number | null) => {
+    const getAssigneeName = (assigneeId: string | null) => {
         if (assigneeId === null) return 'Unassigned';
         const member = teamMembers.find((m) => m.id === assigneeId);
-        return member ? member.member_name : `User #${assigneeId}`;
+        return member ? member.full_name : `User #${assigneeId}`;
     };
 
     //Fetches TeamMembers from team_members table 
     const fetchTeamMembers = async () => {
     const { data, error } = await supabase
-        .from('team_members')
-        .select('id, member_name')
-        .order('id', { ascending: true });
+        .from('profiles')
+        .select('id, full_name, status')
+        .eq('status', 'active')
+        .order('full_name', { ascending: true });
 
         if (error) {
             console.error('Error fetching team members:', error);
@@ -110,11 +121,12 @@ export default function Tasks() {
             console.error('No Signed-in User Found:', userError?.message);
             return;
         }
-
+        setCurrentUserId(user.id);
         const {data, error } = await supabase
             .from('tasks')
             .select('*')
-            .eq('user_id', user.id)
+            //Shows tasks user created and assigned to the user
+            .or(`user_id.eq.${user.id},assignee_profile_id.eq.${user.id}`)
             .order('id', { ascending: true });
 
         if (error) {
@@ -200,7 +212,7 @@ export default function Tasks() {
             {
                 title: newTask.title,
                 description: newTask.description,
-                assignee_id: newTask.assignee_id === '' ? null : Number(newTask.assignee_id),
+                assignee_profile_id: newTask.assignee_profile_id === '' ? null : newTask.assignee_profile_id,
                 due_date: newTask.due_date,
                 priority: newTask.priority,
                 status: newTask.status,
@@ -220,7 +232,7 @@ export default function Tasks() {
             setNewTask({
                 title: '',
                 description: '',
-                assignee_id: '',
+                assignee_profile_id: '',
                 due_date: '',
                 priority: 'medium',
                 status: 'pending',
@@ -230,16 +242,50 @@ export default function Tasks() {
         }
     };
 
-    const toggleTaskStatus = (taskId: number) => {
-        setTasks(tasks.map(task => {
-        if (task.id === taskId) {
-            return {
-            ...task,
-            status: task.status === 'completed' ? 'pending' : 'completed'
-            };
+    const toggleTaskStatus = async (taskId: number) => {
+        const {
+            data: {user},
+            error: userError,
+        } = await supabase.auth.getUser();
+
+        if (userError || !user) {
+            console.error("No signed-in user found:", userError?.message);
+            alert("You must be signed in to update a task.");
+            return;
         }
-        return task;
-        }));
+
+        const currentTask = tasks.find((task) => task.id === taskId);
+
+        //Checks if task exists before trying to update status
+        if (!currentTask) {
+            console.error("Task not found:", taskId);
+            alert("Task not found.");
+            return;
+        }
+
+        //Toggles between completed and pending status
+        const newStatus = currentTask.status === 'completed' ? 'pending' : 'completed';
+
+        //Updates status in Supabase
+        const { error } = await supabase
+            .from('tasks')
+            .update({ status: newStatus })
+            .eq('id', taskId)
+            .or(`user_id.eq.${user.id},assignee_profile_id.eq.${user.id}`);
+
+        //Errors handled and displayed to user
+        if (error) {
+            console.error('Error updating task status:', error);
+            alert('Error updating task status.' + error.message);
+            return;
+        }
+
+        //Updates status in UI
+        setTasks(tasks.map((task) => 
+            task.id === taskId ? { ...task, status: newStatus } : task
+        ));
+
+        //Resets filters to show all tasks after status change
         setStatusFilter('all');
     };
 
@@ -301,6 +347,22 @@ export default function Tasks() {
                 <CardDescription>Manage your to-do list and activities</CardDescription>
                 </div>
                 <div className="flex items-center gap-3">
+                {/* Select Menu for Filtering Tasks by Ownership - Created by user, assigned to user, or all tasks */}
+                <Select
+                    value={ownershipFilter}
+                    onValueChange={(value) =>
+                        setOwnershipFilter(value as 'all' | 'created' | 'assigned')
+                    }
+                >
+                    <SelectTrigger className="w-44">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Relevant</SelectItem>
+                        <SelectItem value="created">Created by Me</SelectItem>
+                        <SelectItem value="assigned">Assigned to Me</SelectItem>
+                    </SelectContent>
+                </Select>
                 {/* Select Menu for Filtering Tasks */}
                 <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
                     <SelectTrigger className="w-40">
@@ -389,8 +451,8 @@ export default function Tasks() {
                         <div className="space-y-2">
                             <Label htmlFor="task-assignee">Assignee</Label>
                             <Select
-                                value={newTask.assignee_id}
-                                onValueChange={(value) => setNewTask({ ...newTask, assignee_id: value })}
+                                value={newTask.assignee_profile_id}
+                                onValueChange={(value) => setNewTask({ ...newTask, assignee_profile_id: value })}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select team member" />
@@ -398,7 +460,7 @@ export default function Tasks() {
                                 <SelectContent>
                                     {teamMembers.map((member) => (
                                         <SelectItem key={member.id} value={String(member.id)}>
-                                            {member.member_name}
+                                            {member.full_name}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -503,7 +565,7 @@ export default function Tasks() {
                     <div className="flex items-center gap-4 text-sm text-gray-600">
                         <div className="flex items-center gap-1">
                             <User className="w-4 h-4" />
-                            {getAssigneeName(task.assignee_id)}
+                            {getAssigneeName(task.assignee_profile_id)}
                         </div>
                         <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4" />
@@ -518,6 +580,6 @@ export default function Tasks() {
             </CardContent>
         </Card>
         </div>
-        </div>
+    </div>
     );
 }

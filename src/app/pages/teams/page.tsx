@@ -2,21 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus } from 'lucide-react';
-import { Trash } from 'lucide-react'
 import { supabase } from '@/app/server/supabaseClient';
 
 interface TeamMember {
-    id: number;
-    member_name: string;
-    role: string;
-    initials: string;
+    id: string;
+    full_name: string;
+    email: string | null;
+    role: string | null;
     status: 'active' | 'inactive';
     completed_tasks: number;
     in_progress_tasks: number;
@@ -33,34 +25,70 @@ export default function TeamPage() {
     //     { id: 5, name: 'Lisa Anderson', role: 'Manager', initials: 'LA', status: 'inactive', completed_tasks: 42, in_progress_tasks: 3, performance: 95 },
     ]);
 
-    const [newMember, setNewMember] = useState({
-        member_name: '',
-        role: '',
-        initials: '',
-        status: 'active' as const,
-        completed_tasks: 0,
-        in_progress_tasks: 0,
-        performance: 0,
-    });
-
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-
     // Fetch team members from Supabase
     useEffect(() => {
         fetchTeamMembers();
     }, []);
 
-    const fetchTeamMembers = async () => {
-        const { data, error } = await supabase
-            .from('team_members')
-            .select('*')
-            .order('id', { ascending: true });
+    const getInitials = (name: string) => {
+    return name
+        .split(' ')
+        .map((part) => part[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase();
+    };
 
-        if (error) {
-            console.error('Error fetching team members:', error);
-        } else {
-            setTeamMembers(data as TeamMember[]);
+    //Fetch team members and their task stats
+    const fetchTeamMembers = async () => {
+        // Fetch profiles to get team members
+        const { data: profilesData, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, full_name, email, role, status, created_at')
+            .order('created_at', { ascending: true });
+
+        if (profilesError) {
+            console.error('Error fetching team members:', profilesError);
+            return;
         }
+
+        // Fetch tasks to calculate stats
+        const {data: tasksData, error: tasksError } = await supabase
+            .from('tasks')
+            .select('id, status, assignee_profile_id');
+
+        if (tasksError) {
+            console.error('Error fetching tasks:', tasksError);
+            return;
+        }
+
+        // Map profiles to team members, calculating task stats
+        const members: TeamMember[] = (profilesData || []).map((profile: any) => {
+            const memberTasks = (tasksData || []).filter(
+                (task: any) => task.assignee_profile_id === profile.id
+            );
+
+            const completed = memberTasks.filter(
+                (task: any) => task.status === 'completed'
+            ).length;
+
+            const inProgress = memberTasks.filter(
+                (task: any) => task.status === 'in_progress'
+            ).length;
+
+            return {
+                id: profile.id,
+                full_name: profile.full_name ?? 'Unnamed User',
+                email: profile.email ?? null,
+                role: profile.role ?? 'Team Member',
+                status: profile.status === 'inactive' ? 'inactive' : 'active',
+                completed_tasks: completed,
+                in_progress_tasks: inProgress,
+                performance: 0,
+            };
+        });
+
+        setTeamMembers(members);
     };
 
     // Calculate total stats
@@ -68,43 +96,8 @@ export default function TeamPage() {
     const activeMembers = teamMembers.filter(m => m.status === 'active').length;
     const totalCompleted = teamMembers.reduce((sum, m) => sum + m.completed_tasks, 0);
     const totalInProgress = teamMembers.reduce((sum, m) => sum + m.in_progress_tasks, 0);
-    const avgPerformance = teamMembers.length > 0
-        ? Math.round(teamMembers.reduce((sum, m) => sum + m.performance, 0) / teamMembers.length)
-        : 0;
+    const avgPerformance = teamMembers.length > 0? Math.round(teamMembers.reduce((sum, m) => sum + m.performance, 0) / teamMembers.length): 0;
 
-    const handleAddMember = async () => {
-        const { data, error } = await supabase
-            .from('team_members')
-            .insert([
-                {
-                    member_name: newMember.member_name,
-                    role: newMember.role,
-                    initials: newMember.initials,
-                    status: newMember.status,
-                    completed_tasks: newMember.completed_tasks,
-                    in_progress_tasks: newMember.in_progress_tasks,
-                    performance: newMember.performance,
-                }
-            ])
-            .select();
-
-        if (error) {
-            console.error('Error adding team member:', error);
-            alert('Error adding team member: ' + error.message);
-        } else {
-            setTeamMembers([...teamMembers, data[0]]);
-            setNewMember({
-                member_name: '',
-                role: '',
-                initials: '',
-                status: 'active',
-                completed_tasks: 0,
-                in_progress_tasks: 0,
-                performance: 0,
-            });
-            setIsDialogOpen(false);
-        }
-    };
 
     const getStatusColor = (status: string) => {
         return status === 'active' ? 'bg-green-500' : 'bg-gray-400';
@@ -123,17 +116,21 @@ export default function TeamPage() {
         }
     };
 
-    const handleDeleteMember = async (id: number) => {
+    const handleDeleteMember = async (id: string) => {
         const { error } = await supabase
-            .from('team_members')
-            .delete()
+            .from('profiles')
+            .update({ status: 'inactive' })
             .eq('id', id);
 
         if (error) {
             console.error('Error deleting team member:', error);
             alert('Error deleting team member: ' + error.message);
         } else {
-            setTeamMembers(teamMembers.filter((member) => member.id !== id));
+            setTeamMembers((prev) =>
+                prev.map((member) =>
+                    member.id === id ? { ...member, status: 'inactive' } : member
+                )            
+            );
         }
     };
 
@@ -143,100 +140,6 @@ export default function TeamPage() {
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <CardTitle className="text-2xl">Our Team</CardTitle>
-                        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                            <DialogTrigger asChild>
-                                <Button className="flex items-center gap-2">
-                                    <Plus className="w-4 h-4" />
-                                    Add Member
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>Add Team Member</DialogTitle>
-                                    <DialogDescription>Add a new member to your team</DialogDescription>
-                                </DialogHeader>
-                                <div className="space-y-4 py-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="member-name">Name</Label>
-                                        <Input
-                                            id="member-name"
-                                            value={newMember.member_name}
-                                            onChange={(e) => setNewMember({ ...newMember, member_name: e.target.value })}
-                                            placeholder="John Doe"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="member-role">Role</Label>
-                                        <Input
-                                            id="member-role"
-                                            value={newMember.role}
-                                            onChange={(e) => setNewMember({ ...newMember, role: e.target.value })}
-                                            placeholder="Developer"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="member-initials">Initials</Label>
-                                        <Input
-                                            id="member-initials"
-                                            value={newMember.initials}
-                                            onChange={(e) => setNewMember({ ...newMember, initials: e.target.value.toUpperCase() })}
-                                            placeholder="JD"
-                                            maxLength={2}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="member-status">Status</Label>
-                                        <Select
-                                            value={newMember.status}
-                                            onValueChange={(value) => setNewMember({ ...newMember, status: value as any })}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="active">Active</SelectItem>
-                                                <SelectItem value="inactive">Inactive</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="member-completed">Completed Tasks</Label>
-                                        <Input
-                                            id="member-completed"
-                                            type="number"
-                                            value={newMember.completed_tasks}
-                                            onChange={(e) => setNewMember({ ...newMember, completed_tasks: parseInt(e.target.value) || 0 })}
-                                            placeholder="0"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="member-progress">In Progress Tasks</Label>
-                                        <Input
-                                            id="member-progress"
-                                            type="number"
-                                            value={newMember.in_progress_tasks}
-                                            onChange={(e) => setNewMember({ ...newMember, in_progress_tasks: parseInt(e.target.value) || 0 })}
-                                            placeholder="0"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="member-performance">Performance (%)</Label>
-                                        <Input
-                                            id="member-performance"
-                                            type="number"
-                                            value={newMember.performance}
-                                            onChange={(e) => setNewMember({ ...newMember, performance: parseInt(e.target.value) || 0 })}
-                                            placeholder="0"
-                                            min="0"
-                                            max="100"
-                                        />
-                                    </div>
-                                </div>
-                                <DialogFooter>
-                                    <Button onClick={handleAddMember}>Add Member</Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
                     </div>
 
                     {/* Stats Cards */}
@@ -276,23 +179,19 @@ export default function TeamPage() {
                             <Card key={member.id} className="bg-white">
                                 <CardContent className="p-6">
                                     <div className="flex items-start gap-4 mb-4">
-                                        <div className={`w-12 h-12 rounded-full ${getRoleColor(member.role)} flex items-center justify-center text-gray-700 font-medium`}>
-                                            {member.initials}
+                                        <div className={`w-12 h-12 rounded-full ${getRoleColor(member.role || 'Team Member')} flex items-center justify-center text-gray-700 font-medium`}>
+                                            {getInitials(member.full_name)}
                                         </div>
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2">
-                                                <h4 className="font-medium text-gray-900">{member.member_name}</h4>
+                                                <h4 className="font-medium text-gray-900">{member.full_name}</h4>
                                                 <div className={`w-2 h-2 rounded-full ${getStatusColor(member.status)}`}></div>
                                             </div>
-                                            <p className="text-sm text-gray-500">{member.role}</p>
+                                            <p className="text-sm text-gray-500">{member.role || 'Team Member'}</p>
+                                            {member.email && (
+                                                <p className="text-xs text-gray-400 mt-1">{member.email}</p>
+                                            )}
                                         </div>
-                                        <Button
-                                            variant="destructive"
-                                            size="sm"
-                                            onClick={() => handleDeleteMember(member.id)}
-                                        >
-                                            <Trash/>
-                                        </Button>
                                     </div>
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between text-sm">

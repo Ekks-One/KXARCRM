@@ -24,7 +24,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <SidebarProvider>
       <AppSidebar />
       <main className="min-h-screen flex-1">
-        <SidebarTrigger />
         {children}
       </main>
     </SidebarProvider>
