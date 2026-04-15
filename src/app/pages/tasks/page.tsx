@@ -55,6 +55,15 @@ export default function Tasks() {
         assignee_profile_id: '',
     });
 
+    //State to track errors for each field in the add task form
+    const [errors, setErrors] = useState({
+        title: false,
+        description: false,
+        assignee_profile_id: false,
+        customer_id: false,
+        due_date: false,
+    });
+
     //Holds list of all Team Members
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
     const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'in-progress' | 'completed'>('all');
@@ -70,6 +79,7 @@ export default function Tasks() {
     // Old method for filtering tasks by status only
     // const filteredTasks = statusFilter === 'all' ? tasks : tasks.filter(task => task.status === statusFilter);
 
+    //New method for filtering tasks by status, priority, and ownership
     const filteredTasks = tasks.filter(task => {
         const matchStatus = statusFilter === 'all' || task.status === statusFilter;
         const matchPriority = priorityFilter === 'all' || task.priority === priorityFilter;
@@ -196,6 +206,21 @@ export default function Tasks() {
     };
 
     const handleAddTask = async () => {
+        const newErrors = {
+            title: !newTask.title.trim(),
+            description: !newTask.description.trim(),
+            assignee_profile_id: !newTask.assignee_profile_id.trim(),
+            customer_id: !newTask.customer_id.trim(),
+            due_date: !newTask.due_date.trim(),
+        };
+
+        setErrors(newErrors);
+
+        //If any errors, do not submit form and show error messages
+        if (Object.values(newErrors).some(error => error)) {
+            return;
+        }
+
         const {
             data: {user},
             error: userError,
@@ -221,7 +246,7 @@ export default function Tasks() {
             }
         ])
         //Returns new inserted task from supabase
-        .select()
+        .select();
         //Closes dialog after successful insert
         if(error) {
             console.error('Error adding task:', error);
@@ -237,7 +262,14 @@ export default function Tasks() {
                 priority: 'medium',
                 status: 'pending',
                 customer_id: '',
-            })
+            });
+            setErrors({
+                title: false,
+                description: false,
+                assignee_profile_id: false,
+                customer_id: false,
+                due_date: false,
+            });
             setIsDialogOpen(false);
         }
     };
@@ -433,19 +465,23 @@ export default function Tasks() {
                         <Label htmlFor="task-title">Title</Label>
                         <Input
                             id="task-title"
+                            className={errors.title ? "border-red-500" : ""}
                             value={newTask.title}
                             onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
                             placeholder="Follow up with customer"
                         />
+                        {errors.title && <p className="text-red-500 text-sm"></p> }
                         </div>
                         <div className="space-y-2">
                         <Label htmlFor="task-description">Description</Label>
                         <Textarea
                             id="task-description"
+                            className={errors.description ? "border-red-500" : ""}
                             value={newTask.description}
                             onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
                             placeholder="Add task details..."
                         />
+                        {errors.description && <p className="text-red-500 text-sm"></p> }
                         </div>
                         {/* Drop Down of current Team Members on Teams Page */}
                         <div className="space-y-2">
@@ -454,7 +490,7 @@ export default function Tasks() {
                                 value={newTask.assignee_profile_id}
                                 onValueChange={(value) => setNewTask({ ...newTask, assignee_profile_id: value })}
                             >
-                                <SelectTrigger>
+                                <SelectTrigger className={errors.assignee_profile_id ? "border-red-500" : ""}>
                                     <SelectValue placeholder="Select team member" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -470,19 +506,23 @@ export default function Tasks() {
                         <Label htmlFor="task-related">Related To</Label>
                         <Input
                             id="task-related"
+                            className={errors.customer_id ? "border-red-500" : ""}
                             value={newTask.customer_id}
                             onChange={(e) => setNewTask({ ...newTask, customer_id: e.target.value })}
                             placeholder="Company or Contact"
                         />
+                        {errors.customer_id && <p className="text-red-500 text-sm"></p> }
                         </div>
                         <div className="space-y-2">
                         <Label htmlFor="task-date">Due Date</Label>
                         <Input
                             id="task-date"
                             type="date"
+                            className={errors.due_date ? "border-red-500" : ""}
                             value={newTask.due_date}
                             onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
                         />
+                        {errors.due_date && <p className="text-red-500 text-sm"></p> }
                         </div>
                         <div className="space-y-2">
                         <Label htmlFor="task-priority">Priority</Label>
