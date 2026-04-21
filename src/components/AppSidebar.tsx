@@ -42,7 +42,7 @@ const items = [
   },
   {
     title: "Settings",
-    url: "#",
+    url: "/pages/settings",
     icon: Settings,
   },
   {
@@ -54,7 +54,7 @@ const items = [
 
 export const AppSidebar = () => {
   return (
-    <Sidebar className="sticky top-0 h-screen border-r">
+    <Sidebar collapsible="none" className="sticky top-0 h-screen border-r">
       <SidebarContent>
         <Link href="/pages/dashboard" className="flex items-center gap-3 px-3 py-3">
           <Image

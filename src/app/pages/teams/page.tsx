@@ -10,6 +10,7 @@ interface TeamMember {
     email: string | null;
     role: string | null;
     status: 'active' | 'inactive';
+    pending_tasks: number;
     completed_tasks: number;
     in_progress_tasks: number;
     performance: number;
@@ -68,13 +69,21 @@ export default function TeamPage() {
                 (task: any) => task.assignee_profile_id === profile.id
             );
 
+            const pending = memberTasks.filter(
+                (task: any) => task.status === 'pending'
+            ).length;
+
             const completed = memberTasks.filter(
                 (task: any) => task.status === 'completed'
             ).length;
 
             const inProgress = memberTasks.filter(
-                (task: any) => task.status === 'in_progress'
+                (task: any) => task.status === 'in-progress'
             ).length;
+
+            const totalTasks = memberTasks.length;
+
+            const performance = totalTasks === 0 ? 0 : Math.round((completed / totalTasks) * 100);
 
             return {
                 id: profile.id,
@@ -82,9 +91,10 @@ export default function TeamPage() {
                 email: profile.email ?? null,
                 role: profile.role ?? 'Team Member',
                 status: profile.status === 'inactive' ? 'inactive' : 'active',
+                pending_tasks: pending,
                 completed_tasks: completed,
                 in_progress_tasks: inProgress,
-                performance: 0,
+                performance,
             };
         });
 
@@ -96,6 +106,7 @@ export default function TeamPage() {
     const activeMembers = teamMembers.filter(m => m.status === 'active').length;
     const totalCompleted = teamMembers.reduce((sum, m) => sum + m.completed_tasks, 0);
     const totalInProgress = teamMembers.reduce((sum, m) => sum + m.in_progress_tasks, 0);
+    const totalPending = teamMembers.reduce((sum, m) => sum + m.pending_tasks, 0);
     const avgPerformance = teamMembers.length > 0? Math.round(teamMembers.reduce((sum, m) => sum + m.performance, 0) / teamMembers.length): 0;
 
 
@@ -143,7 +154,7 @@ export default function TeamPage() {
                     </div>
 
                     {/* Stats Cards */}
-                    <div className="grid grid-cols-4 gap-4 mt-6">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mt-6">
                         <Card className="bg-white">
                             <CardContent className="p-6">
                                 <div className="text-sm text-gray-500 mb-1">Team Members</div>
@@ -161,6 +172,12 @@ export default function TeamPage() {
                             <CardContent className="p-6">
                                 <div className="text-sm text-gray-500 mb-1">In Progress</div>
                                 <div className="text-2xl font-medium">{totalInProgress}</div>
+                            </CardContent>
+                        </Card>
+                        <Card className="bg-white">
+                            <CardContent className="p-6">
+                                <div className="text-sm text-gray-500 mb-1">Pending</div>
+                                <div className="text-2xl font-medium">{totalPending}</div>
                             </CardContent>
                         </Card>
                         <Card className="bg-white">
@@ -201,6 +218,10 @@ export default function TeamPage() {
                                         <div className="flex items-center justify-between text-sm">
                                             <span className="text-gray-500">In Progress</span>
                                             <span className="font-medium">{member.in_progress_tasks}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-gray-500">Pending</span>
+                                            <span className="font-medium">{member.pending_tasks}</span>
                                         </div>
                                         <div className="flex items-center justify-between text-sm">
                                             <span className="text-gray-500">Performance</span>

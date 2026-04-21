@@ -19,9 +19,13 @@ export const metadata: Metadata = {
   description: "CRM Dashboard",
 };
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true}>
       <AppSidebar />
       <main className="min-h-screen flex-1">
         {children}

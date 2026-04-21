@@ -4,9 +4,12 @@ import {supabase} from "@/app/server/supabaseClient"
 import React from 'react'
 import Login from "@/components/Login"
 import {useState} from "react"
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [loginStatus, setLoginStatus] = useState('Pending');
+
+  const router = useRouter();
 
   async function signIn(email: string, password: string) {
     // Calls supabase auth function to sign in
@@ -14,13 +17,17 @@ export default function Home() {
       email: email,
       password: password
     })
-    // Log user information
-    console.log('Email:', email);
-    console.log('Password:', password);
+
+    if (error) {
+      setLoginStatus(error.message);
+      return;
+    }
+
     // If user is returned then sign in was successful, update status and redirect user
-    if(data.user) {
-      setLoginStatus("Valid Email and Password, signing in")
-      window.location.href = 'http://localhost:3000/pages/dashboard'
+    if (data.user) {
+      setLoginStatus("Valid Email and Password, signing in");
+      router.push("/pages/dashboard");
+      return;
     }
     // If no user returned, sign in failed, update status
     else
