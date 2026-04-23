@@ -18,12 +18,28 @@ import { supabase } from '@/app/server/supabaseClient';
 // Register the required Chart.js components
 ChartJS.register(BarElement, Tooltip, Legend, Title, CategoryScale, LinearScale);
 
+type Project = {
+  project_id: number;
+};
+
+type Customer = {
+  customer_id: number;
+};
+
+type Payment = {
+  payment_id: number;
+};
+
+type Task = {
+  id: number;
+};
+
 export default function BarChart() {
 
-  const[projects, setProjects] = useState<any[]>([]);
-  const[customers, setCustomers] = useState<any[]>([]);
-  const[payments, setPayments] = useState<any[]>([]);
-  const[tasks, setTasks] = useState<any[]>([]);
+  const[projects, setProjects] = useState<Project[]>([]);
+  const[customers, setCustomers] = useState<Customer[]>([]);
+  const[payments, setPayments] = useState<Payment[]>([]);
+  const[tasks, setTasks] = useState<Task[]>([]);
 
   useEffect(() => {
       fetchProjects();
