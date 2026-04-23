@@ -39,7 +39,6 @@ export function ShowCustomers () {
         const {data, error } = await supabase
         .from('customers')
         .select('*')
-        .eq("user_id", user.id);
 
         if (error) {
             console.error('Error fetching customers: ', error);
