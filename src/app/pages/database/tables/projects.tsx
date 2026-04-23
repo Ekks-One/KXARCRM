@@ -4,9 +4,18 @@ import { useEffect, useState } from 'react';
 import "./tableStyle.css";
 import { supabase } from '@/app/server/supabaseClient';
 
+type Project = {
+  project_id: number;
+  customer_id: number;
+  type: string;
+  notes: string;
+  status: string;
+  due_date: string;
+};
+
 export function ShowProjects () {
 
-    const[projects, setProjects] = useState([]);
+    const[projects, setProjects] = useState<Project[]>([]);
 
     useEffect(() => {
         fetchData();
@@ -15,8 +24,12 @@ export function ShowProjects () {
     const fetchData = async () => {
         const {data, error } = await supabase.from('projects').select('*');
 
-        if (error) {console.error('Error fetching customers: ', error);}
-        else {setProjects(data);}
+        if (error) {
+            console.error('Error fetching customers: ', error);
+        }
+        else {
+            setProjects(data || []);
+        }
     };
 
     return (
@@ -34,14 +47,14 @@ export function ShowProjects () {
                 </tr>
                 </thead>
                 <tbody>
-                    {projects.map(projects => (
-                        <tr key={projects.project_id}>
-                            <td>{projects.project_id}</td>
-                            <td>{projects.customer_id}</td>
-                            <td>{projects.type}</td>
-                            <td>{projects.notes}</td>
-                            <td>{projects.status}</td>
-                            <td>{projects.due_date}</td>
+                    {projects.map(project => (
+                        <tr key={project.project_id}>
+                            <td>{project.project_id}</td>
+                            <td>{project.customer_id}</td>
+                            <td>{project.type}</td>
+                            <td>{project.notes}</td>
+                            <td>{project.status}</td>
+                            <td>{project.due_date}</td>
                         </tr>
                     ))}
                 </tbody>
