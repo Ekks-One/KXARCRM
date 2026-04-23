@@ -49,8 +49,8 @@ export default function Tasks() {
         title: '',
         description: '',
         due_date: '',
-        priority: 'medium' as const,
-        status: 'pending' as const,
+        priority: 'medium',
+        status: 'pending',
         customer_id: '',
         assignee_profile_id: '',
     });
@@ -528,7 +528,7 @@ export default function Tasks() {
                         <Label htmlFor="task-priority">Priority</Label>
                         <Select
                             value={newTask.priority}
-                            onValueChange={(value) => setNewTask({ ...newTask, priority: value as any })}
+                            onValueChange={(value) => setNewTask({ ...newTask, priority: value as 'low' | 'medium' | 'high' })}
                         >
                             <SelectTrigger>
                             <SelectValue />
@@ -544,7 +544,7 @@ export default function Tasks() {
                         <Label htmlFor="task-status">Status</Label>
                         <Select
                             value={newTask.status}
-                            onValueChange={(value) => setNewTask({ ...newTask, status: value as any })}
+                            onValueChange={(value) => setNewTask({ ...newTask, status: value as 'pending' | 'in-progress' | 'completed' })}
                         >
                             <SelectTrigger>
                             <SelectValue />

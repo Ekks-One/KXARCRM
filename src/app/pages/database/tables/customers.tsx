@@ -6,9 +6,21 @@ import RemoveEntry from "./removeEntry";
 import "./tableStyle.css";
 import { supabase } from '@/app/server/supabaseClient';
 
+interface Customer {
+    id: number;
+    first_name: string | null;
+    last_name: string | null;
+    email_address: string | null;
+    phone_number: string | null;
+    address: string | null;
+    last_contact: string | null;
+    notes: string | null;
+    user_id: string;
+}
+
 export function ShowCustomers () {
 
-    const[customers, setCustomers] = useState<any[]>([]);
+    const[customers, setCustomers] = useState<Customer[]>([]);
 
     useEffect(() => {
         fetchData();

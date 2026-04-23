@@ -14,7 +14,7 @@ import SignUp from "@/components/SignUp";
 
 type Props = {
     onSignUpSubmit: (fullName: string, email: string, password: string, confirmPassword: string) => Promise<{ error?: { message: string } }>;
-    triggerText?: String;
+    triggerText?: string;
 };
 
 export default function SignUpModal({ onSignUpSubmit, triggerText = "Create account"}: Props) {

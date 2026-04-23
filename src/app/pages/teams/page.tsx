@@ -16,6 +16,21 @@ interface TeamMember {
     performance: number;
 }
 
+interface ProfileRow {
+    id: string;
+    full_name: string | null;
+    email: string | null;
+    role: string | null;
+    status: string | null;
+    created_at?: string;
+}
+
+interface TaskRow {
+    id: number;
+    status: 'pending' | 'in-progress' | 'completed';
+    assignee_profile_id: string | null;
+}
+
 export default function TeamPage() {
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
         // Dummy data for testing
@@ -64,21 +79,21 @@ export default function TeamPage() {
         }
 
         // Map profiles to team members, calculating task stats
-        const members: TeamMember[] = (profilesData || []).map((profile: any) => {
+        const members: TeamMember[] = (profilesData || []).map((profile: ProfileRow) => {
             const memberTasks = (tasksData || []).filter(
-                (task: any) => task.assignee_profile_id === profile.id
+                (task: TaskRow) => task.assignee_profile_id === profile.id
             );
 
             const pending = memberTasks.filter(
-                (task: any) => task.status === 'pending'
+                (task: TaskRow) => task.status === 'pending'
             ).length;
 
             const completed = memberTasks.filter(
-                (task: any) => task.status === 'completed'
+                (task: TaskRow) => task.status === 'completed'
             ).length;
 
             const inProgress = memberTasks.filter(
-                (task: any) => task.status === 'in-progress'
+                (task: TaskRow) => task.status === 'in-progress'
             ).length;
 
             const totalTasks = memberTasks.length;
@@ -124,24 +139,6 @@ export default function TeamPage() {
                 return 'bg-yellow-100';
             default:
                 return 'bg-gray-100';
-        }
-    };
-
-    const handleDeleteMember = async (id: string) => {
-        const { error } = await supabase
-            .from('profiles')
-            .update({ status: 'inactive' })
-            .eq('id', id);
-
-        if (error) {
-            console.error('Error deleting team member:', error);
-            alert('Error deleting team member: ' + error.message);
-        } else {
-            setTeamMembers((prev) =>
-                prev.map((member) =>
-                    member.id === id ? { ...member, status: 'inactive' } : member
-                )            
-            );
         }
     };
 

@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Calendar } from 'react-calendar';
-import './calendar.css';
+import Calendar from 'react-calendar';
 import { supabase } from '@/app/server/supabaseClient';
 import { Badge } from '@/components/ui/badge';
 import { User } from 'lucide-react';
+import './calendar.css';
 
+type CalendarValue = React.ComponentProps<typeof Calendar>['value'];
+type CalendarOnChange = NonNullable<React.ComponentProps<typeof Calendar>['onChange']>;
 
 export default function ShowCalendar() {
     interface Task {
@@ -20,14 +22,18 @@ export default function ShowCalendar() {
         customer_id: string;
     }
 
-    const [tasks, setTasks] = useState<Task[]>([
-    ]);
+    const [tasks, setTasks] = useState<Task[]>([]);
 
-    const [date, setValue] = useState(new Date());
+    const [date, setValue] = useState<CalendarValue>(new Date());
 
-    const handleDateChange = (date: Date) => {
-        setValue(date);
+    const handleDateChange = (value: CalendarValue) => {
+        setValue(value);
     };
+    
+    const selectedDate =
+        date instanceof Date ? date.toISOString().substring(0, 10) : '';
+
+    const filteredTasks = tasks.filter((task) => task.due_date === selectedDate);
 
     const getPriorityColor = (priority: string) => {
         switch (priority) {
@@ -82,8 +88,6 @@ export default function ShowCalendar() {
                 setTasks(data as Task[]);
             }
         };
-
-    const filteredTasks = tasks.filter(task => task.due_date == date.toISOString().substring(0,10))
 
     //Tasks setup for highlighting dates
     const tileTasks = new Set(tasks.map(task => task.due_date))
