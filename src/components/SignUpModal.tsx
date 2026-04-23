@@ -50,7 +50,6 @@ export default function SignUpModal({ onSignUpSubmit, triggerText = "Create acco
           <DialogTitle>Sign up</DialogTitle>
         </DialogHeader>
 
-        {/* Your component, but rendered in modal mode */}
         <SignUp onSignUpSubmit={handleSignUp} variant="modal" />
       </DialogContent>
     </Dialog>

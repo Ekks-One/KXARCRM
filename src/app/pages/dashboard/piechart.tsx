@@ -20,8 +20,8 @@ ChartJS.register(ArcElement, Tooltip, Legend, Title);
 
 export default function PieChart() {
 
-  const[completedProjects, setCompletedProjects] = useState([]);
-  const[totalProjects, setTotalProjects] = useState([]);
+  const[completedProjects, setCompletedProjects] = useState(0);
+  const[totalProjects, setTotalProjects] = useState(0);
 
   useEffect(() => {
       fetchCompletedProjects();
@@ -37,7 +37,7 @@ export default function PieChart() {
       .eq('status', 'Completed');
 
     if (error) {console.error('Error fetching data:', error);}
-    else { setCompletedProjects(data);}
+    else { setCompletedProjects(data?.length || 0);}
   };
 
   const fetchTotalProjects = async () =>
@@ -47,7 +47,7 @@ export default function PieChart() {
       .select("*")
 
     if (error) {console.error('Error fetching data:', error);}
-    else { setTotalProjects(data);}
+    else { setTotalProjects(data?.length || 0);}
   };
 
   const data = {
@@ -55,7 +55,7 @@ export default function PieChart() {
     datasets: [
       {
         label: 'Number of Projects',
-        data: [completedProjects.length, totalProjects.length - completedProjects.length],
+        data: [completedProjects, totalProjects - completedProjects],
         backgroundColor: [
           '#15ed20',
           '#1fc3e0',
@@ -73,18 +73,18 @@ export default function PieChart() {
     responsive: true,
     plugins: {
       legend: {
-        position: 'top',
+        position: 'top' as const,
       },
       title: {
         display: true,
-        text: 'Total Projects - ' + totalProjects.length,
+        text: 'Total Projects - ' + totalProjects,
       },
     },
   };
 
   return (
     <div style={{width: '400px', height: '400px'}}>
-    <Pie data={data} options={options} />
+      <Pie data={data} options={options} />
     </div>
   );
 

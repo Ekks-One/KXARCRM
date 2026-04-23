@@ -1,7 +1,6 @@
 'use client';
 
 import "@/app/pages/database/pageStyle.css";
-import { Button } from "@/components/ui/button";
 import React, { useState } from 'react';
 
 import {
@@ -16,26 +15,17 @@ import {
 
 import { ShowPatients } from "@/app/pages/database/tables/patients";
 
-const tables = {
-  A: <ShowPatients />,
-};
-
 export function Medical() {
-
-  const[activeTable, setActiveTable] = useState('A');
 
   return (
     <Card className="m-8 p-8">
       <div>
         <CardHeader>
-          <CardTitle>Dashboard</CardTitle>
-          <div className="gap-4 flex">
-            <Button onClick={() => setActiveTable('A')}>Patients</Button>
-          </div>
+          <CardTitle>Medical Dashboard</CardTitle>
         </CardHeader>
 
         <CardContent>
-          {tables[activeTable]}
+          <ShowPatients />
         </CardContent>
       </div>
     </Card>

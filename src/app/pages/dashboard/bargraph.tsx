@@ -20,10 +20,10 @@ ChartJS.register(BarElement, Tooltip, Legend, Title, CategoryScale, LinearScale)
 
 export default function BarChart() {
 
-  const[projects, setProjects] = useState([]);
-  const[customers, setCustomers] = useState([]);
-  const[payments, setPayments] = useState([]);
-  const[tasks, setTasks] = useState([]);
+  const[projects, setProjects] = useState<any[]>([]);
+  const[customers, setCustomers] = useState<any[]>([]);
+  const[payments, setPayments] = useState<any[]>([]);
+  const[tasks, setTasks] = useState<any[]>([]);
 
   useEffect(() => {
       fetchProjects();
@@ -39,7 +39,7 @@ export default function BarChart() {
       .select("*")
 
     if (error) {console.error('Error fetching data:', error);}
-    else { setProjects(data);}
+    else { setProjects(data || []);}
   };
 
   const fetchCustomers = async () =>
@@ -49,7 +49,7 @@ export default function BarChart() {
       .select("*")
 
     if (error) {console.error('Error fetching data:', error);}
-    else { setCustomers(data);}
+    else { setCustomers(data || []);}
   };
 
   const fetchPayments = async () =>
@@ -59,7 +59,7 @@ export default function BarChart() {
       .select("*")
 
     if (error) {console.error('Error fetching data:', error);}
-    else { setPayments(data);}
+    else { setPayments(data || []);}
   };
 
   const fetchTasks = async () =>
@@ -69,7 +69,7 @@ export default function BarChart() {
       .select("*")
 
     if (error) {console.error('Error fetching data:', error);}
-    else { setTasks(data);}
+    else { setTasks(data || []);}
   };
 
   const data = {
@@ -99,7 +99,7 @@ export default function BarChart() {
     responsive: true,
     plugins: {
       legend: {
-        position: 'top',
+        position: 'top' as const,
       },
       title: {
         display: true,

@@ -4,9 +4,16 @@ import { useEffect, useState } from 'react';
 import "./tableStyle.css";
 import { supabase } from '@/app/server/supabaseClient';
 
+type Payment = {
+  payment_id: number;
+  customer_id: number;
+  project_id: number;
+  amount: number;
+};
+
 export function ShowPayments () {
 
-    const[payments, setPayments] = useState([]);
+    const[payments, setPayments] = useState<Payment[]>([]);
 
     useEffect(() => {
         fetchData();
@@ -15,8 +22,8 @@ export function ShowPayments () {
     const fetchData = async () => {
         const {data, error } = await supabase.from('payments').select('*');
 
-        if (error) {console.error('Error fetching customers: ', error);}
-        else {setPayments(data);}
+        if (error) {console.error('Error fetching payments: ', error);}
+        else {setPayments(data || []);}
     };
 
     return (
@@ -32,7 +39,7 @@ export function ShowPayments () {
                 </tr>
                 </thead>
                 <tbody>
-                    {payments.map(payments => (
+                    {payments.map((payments) => (
                         <tr key={payments.payment_id}>
                         <td>{payments.payment_id}</td>
                         <td>{payments.customer_id}</td>

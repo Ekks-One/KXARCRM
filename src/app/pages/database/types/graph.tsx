@@ -26,7 +26,8 @@ const tables = {
 
 export function GraphicDesign() {
 
-  const[activeTable, setActiveTable] = useState('A');
+  
+  const[activeTable, setActiveTable] = useState<'A' | 'B' | 'C'>('A');
 
   return (
     <Card className="m-8 p-8">
@@ -34,9 +35,24 @@ export function GraphicDesign() {
         <CardHeader>
           <CardTitle>Dashboard</CardTitle>
           <div className="gap-4 flex">
-            <Button onClick={() => setActiveTable('A')}>Customers</Button>
-            <Button onClick={() => setActiveTable('B')}>Projects</Button>
-            <Button onClick={() => setActiveTable('C')}>Payments</Button>
+            <Button
+              variant={activeTable === 'A' ? 'default' : 'outline'}
+              onClick={() => setActiveTable('A')}
+            >
+              Customers
+            </Button>
+            <Button
+              variant={activeTable === 'B' ? 'default' : 'outline'}
+              onClick={() => setActiveTable('B')}
+            >
+              Projects
+            </Button>
+            <Button
+              variant={activeTable === 'C' ? 'default' : 'outline'}
+              onClick={() => setActiveTable('C')}
+            >
+              Payments
+            </Button>
           </div>
         </CardHeader>
 

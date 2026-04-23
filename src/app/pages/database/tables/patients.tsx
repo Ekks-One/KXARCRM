@@ -4,9 +4,17 @@ import { useEffect, useState } from 'react';
 import "./tableStyle.css";
 import { supabase } from '@/app/server/supabaseClient';
 
+type Patient = {
+  patient_id: number;
+  first_name: string;
+  last_name: string;
+  visit_reason: string;
+  visit_date: string;
+};
+
 export function ShowPatients () {
 
-    const[patients, setPatients] = useState([]);
+    const[patients, setPatients] = useState<Patient[]>([]);
 
     useEffect(() => {
         fetchData();
@@ -15,8 +23,12 @@ export function ShowPatients () {
     const fetchData = async () => {
         const {data, error } = await supabase.from('patients').select('*');
 
-        if (error) {console.error('Error fetching customers: ', error);}
-        else {setPatients(data);}
+        if (error) {
+            console.error('Error fetching patients: ', error);
+        }
+        else {
+            setPatients(data || []);
+        }
     };
 
     return (
@@ -33,13 +45,13 @@ export function ShowPatients () {
                 </tr>
                 </thead>
                 <tbody>
-                    {patients.map(patients => (
-                        <tr key={patients.patient_id}>
-                            <td>{patients.patient_id}</td>
-                            <td>{patients.first_name}</td>
-                            <td>{patients.last_name}</td>
-                            <td>{patients.visit_reason}</td>
-                            <td>{patients.visit_date}</td>
+                    {patients.map((patient) => (
+                        <tr key={patient.patient_id}>
+                            <td>{patient.patient_id}</td>
+                            <td>{patient.first_name}</td>
+                            <td>{patient.last_name}</td>
+                            <td>{patient.visit_reason}</td>
+                            <td>{patient.visit_date}</td>
                         </tr>
                     ))}
                 </tbody>

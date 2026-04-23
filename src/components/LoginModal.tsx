@@ -40,7 +40,6 @@ export default function LoginModal({ onLoginSubmit, triggerText = "Login"}: Prop
           <DialogTitle>Login</DialogTitle>
         </DialogHeader>
 
-        {/* Your component, but rendered in modal mode */}
         <Login onLoginSubmit={handleLogin} variant="modal" />
       </DialogContent>
     </Dialog>
